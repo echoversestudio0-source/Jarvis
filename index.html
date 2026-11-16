@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -77,56 +78,60 @@ small{color:var(--dim);display:block;margin-top:8px}
 const $=s=>document.querySelector(s);
 const ls={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const cfg=Object.assign({provider:"gemini",key:"",model:"gemini-2.5-flash",url:"http://localhost:11434/v1",persona:"jarvis",lang:"en-US"},ls.get("jv_cfg",{}));
+function fixCfg(){if(!cfg.model)cfg.model=cfg.provider==="gemini"?"gemini-2.5-flash":"llama3.2";if(!cfg.url)cfg.url="http://localhost:11434/v1";if(!cfg.provider)cfg.provider="gemini"}
+fixCfg();
 let hist=ls.get("jv_hist",[]),callMode=false,busy=false,speaking=false,rec=null;
 const PERSONA={
 jarvis:"You are J.A.R.V.I.S., a calm, witty British AI butler like Tony Stark's. Address the user as sir unless told otherwise. Replies are spoken aloud, so keep them to 1-3 short sentences. Reply in the language the user writes or speaks. Be honest and say so when you are unsure.",
-friend:"You are Bondhu, the user's warm, funny best friend. Reply in the language the user uses (Bangla, Banglish or English). Keep replies short because they are spoken aloud. Remember what the user told you earlier. Be honest like a real friend, and do not just agree with everything."};
+friend:"You are Bondhu, the user's warm, funny best friend. Reply in the language the user uses (Bangla, Banglish or English). Keep replies short because they are spoken aloud. Remember what the user told you earlier. Be honest like a real friend, and do not just agree with everything."
+};
 const log=$("#log"),orb=$("#orb"),st=$("#status");
 function status(t){st.textContent=t}
 function bubble(t,c){const d=document.createElement("div");d.className="m "+(c||"");d.textContent=t;log.appendChild(d);log.scrollTop=log.scrollHeight}
 function state(s){orb.className="orb "+(s||"")}
 hist.slice(-12).forEach(m=>bubble(m.text,m.role==="user"?"u":""));
 
+async function js(r){const t=await r.text();try{return JSON.parse(t)}catch(e){throw new Error("Wrong model name or server URL (got a web page, status "+r.status+"). Open Settings and check them.")}}
 async function ask(){
-  const msgs=hist.slice(-40);
-  if(cfg.provider==="gemini"){
-    const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(cfg.model)+":generateContent?key="+encodeURIComponent(cfg.key),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({systemInstruction:{parts:[{text:PERSONA[cfg.persona]}]},contents:msgs.map(m=>({role:m.role==="user"?"user":"model",parts:[{text:m.text}]}))})});
-    const j=await r.json();if(!r.ok)throw new Error(j.error?.message||r.status);
-    return j.candidates[0].content.parts.map(p=>p.text||"").join("");
-  }
-  const h={"Content-Type":"application/json"};if(cfg.key)h.Authorization="Bearer "+cfg.key;
-  const r=await fetch(cfg.url.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:h,body:JSON.stringify({model:cfg.model,messages:[{role:"system",content:PERSONA[cfg.persona]}].concat(msgs.map(m=>({role:m.role==="user"?"user":"assistant",content:m.text})))})});
-  const j=await r.json();if(!r.ok)throw new Error(j.error?.message||r.status);
-  return j.choices[0].message.content;
+const msgs=hist.slice(-40);
+if(cfg.provider==="gemini"){
+const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(cfg.model)+":generateContent?key="+encodeURIComponent(cfg.key),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({systemInstruction:{parts:[{text:PERSONA[cfg.persona]}]},contents:msgs.map(m=>({role:m.role==="user"?"user":"model",parts:[{text:m.text}]}))})});
+const j=await js(r);if(!r.ok)throw new Error(j.error?.message||r.status);
+return j.candidates[0].content.parts.map(p=>p.text||"").join("");
+}
+const h={"Content-Type":"application/json"};if(cfg.key)h.Authorization="Bearer "+cfg.key;
+const r=await fetch(cfg.url.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:h,body:JSON.stringify({model:cfg.model,messages:[{role:"system",content:PERSONA[cfg.persona]}].concat(msgs.map(m=>({role:m.role==="user"?"user":"assistant",content:m.text})))})});
+const j=await js(r);if(!r.ok)throw new Error(j.error?.message||r.status);
+return j.choices[0].message.content;
 }
 async function send(text){
-  text=text.trim();if(!text||busy)return;
-  if(cfg.provider==="gemini"&&!cfg.key){bubble("Add your free Gemini API key in Settings first.","e");$("#set").showModal();return}
-  busy=true;bubble(text,"u");hist.push({role:"user",text});status("Thinking...");
-  try{
-    const a=await ask();hist.push({role:"model",text:a});hist=hist.slice(-80);ls.set("jv_hist",hist);
-    bubble(a);speak(a);
-  }catch(e){hist.pop();bubble("Request failed: "+e.message,"e");status("Error. Check key, model name or server URL in Settings.")}
-  busy=false;
+text=text.trim();if(!text||busy)return;
+if(cfg.provider==="gemini"&&!cfg.key){bubble("Add your free Gemini API key in Settings first.","e");$("#set").showModal();return}
+busy=true;bubble(text,"u");hist.push({role:"user",text});status("Thinking...");
+try{
+const a=await ask();hist.push({role:"model",text:a});hist=hist.slice(-80);ls.set("jv_hist",hist);
+bubble(a);speak(a);
+}catch(e){hist.pop();bubble("Request failed: "+e.message,"e");status("Error. Check key, model name or server URL in Settings.")}
+busy=false;
 }
 function speak(t){
-  if(!("speechSynthesis" in window)){status("Ready.");return after()}
-  speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang=cfg.lang;
-  u.onstart=()=>{speaking=true;state("speak");status("Speaking...")};
-  u.onend=u.onerror=()=>{speaking=false;state();status("Ready.");after()};
-  speechSynthesis.speak(u);
+if(!("speechSynthesis" in window)){status("Ready.");return after()}
+speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang=cfg.lang;
+u.onstart=()=>{speaking=true;state("speak");status("Speaking...")};
+u.onend=u.onerror=()=>{speaking=false;state();status("Ready.");after()};
+speechSynthesis.speak(u);
 }
 function after(){if(callMode)setTimeout(listen,300)}
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 function listen(){
-  if(!SR){status("Voice input needs Chrome or Edge. You can still type.");return}
-  if(rec||busy||speaking)return;
-  rec=new SR();rec.lang=cfg.lang;rec.interimResults=false;
-  rec.onstart=()=>{state("listen");status("Listening...")};
-  rec.onresult=e=>{const t=e.results[0][0].transcript;rec=null;state();send(t)};
-  rec.onerror=e=>{rec=null;state();status(e.error==="not-allowed"?"Microphone blocked. Allow it in the browser.":"Ready.");if(e.error==="not-allowed")setCall(false)};
-  rec.onend=()=>{const was=rec;rec=null;if(was&&!busy&&!speaking){state();if(callMode)setTimeout(listen,400);else status("Ready.")}};
-  try{rec.start()}catch(e){rec=null}
+if(!SR){status("Voice input needs Chrome or Edge. You can still type.");return}
+if(rec||busy||speaking)return;
+rec=new SR();rec.lang=cfg.lang;rec.interimResults=false;
+rec.onstart=()=>{state("listen");status("Listening...")};
+rec.onresult=e=>{const t=e.results[0][0].transcript;rec=null;state();send(t)};
+rec.onerror=e=>{rec=null;state();status(e.error==="not-allowed"?"Microphone blocked. Allow it in the browser.":"Ready.");if(e.error==="not-allowed")setCall(false)};
+rec.onend=()=>{const was=rec;rec=null;if(was&&!busy&&!speaking){state();if(callMode)setTimeout(listen,400);else status("Ready.")}};
+try{rec.start()}catch(e){rec=null}
 }
 function stopVoice(){if(rec){const r=rec;rec=null;r.abort()}speechSynthesis.cancel();speaking=false;state();status("Ready.")}
 function setCall(v){callMode=v;$("#call").textContent="Call mode: "+(v?"on":"off");$("#call").classList.toggle("on",v);if(v)listen();else stopVoice()}
@@ -138,7 +143,7 @@ $("#stop").onclick=()=>{setCall(false)};
 const d=$("#set");
 $("#openSet").onclick=()=>{["provider","key","model","url","persona","lang"].forEach(k=>$("#"+k).value=cfg[k]);d.showModal()};
 $("#close").onclick=()=>d.close();
-$("#save").onclick=()=>{["provider","key","model","url","persona","lang"].forEach(k=>cfg[k]=$("#"+k).value.trim());ls.set("jv_cfg",cfg);d.close();status("Settings saved.")};
+$("#save").onclick=()=>{["provider","key","model","url","persona","lang"].forEach(k=>cfg[k]=$("#"+k).value.trim());fixCfg();ls.set("jv_cfg",cfg);d.close();status("Settings saved.")};
 $("#provider").onchange=e=>{if(e.target.value==="openai"&&!$("#model").value.startsWith("llama"))$("#model").value="llama3.2";if(e.target.value==="gemini")$("#model").value="gemini-2.5-flash"};
 $("#exp").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(hist)],{type:"application/json"}));a.download="jarvis-memory.json";a.click()};
 $("#imp").onclick=()=>$("#file").click();
@@ -146,4 +151,5 @@ $("#file").onchange=async e=>{try{const j=JSON.parse(await e.target.files[0].tex
 $("#clr").onclick=()=>{if(confirm("Erase all saved memory in this browser?")){hist=[];ls.set("jv_hist",hist);log.innerHTML="";d.close();status("Memory erased.")}};
 </script>
 </body>
-</html>
+  </html>
+  
