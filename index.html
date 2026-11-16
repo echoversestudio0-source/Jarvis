@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#04080d">
+<title>Jarvis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--void:#04080d;--panel:#0a141f;--line:#17384a;--cyan:#5ee7ff;--gold:#ffb347;--text:#cfeaf5;--dim:#6f93a5}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:radial-gradient(ellipse at 50% 18%,#0b2230 0,var(--void) 62%);color:var(--text);font:16px/1.5 "Chakra Petch",system-ui,sans-serif;display:flex;flex-direction:column;max-width:760px;margin:0 auto;padding:env(safe-area-inset-top) 14px env(safe-area-inset-bottom)}
+header{display:flex;justify-content:space-between;align-items:center;padding:10px 0}
+h1{font-size:20px;font-weight:600;letter-spacing:.35em;margin:0;color:var(--cyan)}
+button,select,input{font:inherit;color:var(--text)}
+button{background:transparent;border:1px solid var(--line);border-radius:6px;padding:8px 12px;cursor:pointer}
+button:hover,button:focus-visible{border-color:var(--cyan);outline:none}
+button.on{background:var(--cyan);color:var(--void);border-color:var(--cyan)}
+.stage{display:grid;place-items:center;padding:14px 0 6px}
+.orb{width:120px;height:120px;border-radius:50%;border:2px solid var(--cyan);position:relative;box-shadow:0 0 30px #5ee7ff55,inset 0 0 30px #5ee7ff33;transition:box-shadow .3s}
+.orb::before,.orb::after{content:"";position:absolute;border-radius:50%;border:2px dashed #5ee7ff88}
+.orb::before{inset:14px;animation:spin 14s linear infinite}
+.orb::after{inset:34px;border:3px solid var(--cyan);background:radial-gradient(circle,#fff 0,#5ee7ff 40%,transparent 72%);animation:spin 6s linear infinite reverse}
+.orb.listen{box-shadow:0 0 50px #ffb347aa,inset 0 0 30px #ffb34755;border-color:var(--gold)}
+.orb.speak{animation:pulse .9s ease-in-out infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{50%{transform:scale(1.07);box-shadow:0 0 60px #5ee7ffcc}}
+#status{text-align:center;color:var(--dim);font-size:14px;min-height:21px}
+#log{flex:1;overflow-y:auto;padding:10px 2px;display:flex;flex-direction:column;gap:10px}
+.m{max-width:88%;padding:9px 13px;border:1px solid var(--line);border-radius:10px;background:var(--panel);white-space:pre-wrap;word-wrap:break-word}
+.m.u{align-self:flex-end;border-color:#6b4a1c;color:#ffe2b8}
+.m.e{border-color:#7a2f2f;color:#ffb3b3}
+form{display:flex;gap:8px;padding:8px 0}
+form input{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+form input:focus{outline:none;border-color:var(--cyan)}
+.bar{display:flex;gap:8px;padding-bottom:10px}
+.bar button{flex:1}
+dialog{background:var(--panel);color:var(--text);border:1px solid var(--cyan);border-radius:10px;width:min(92vw,460px);padding:18px}
+dialog::backdrop{background:#000a}
+label{display:block;margin:10px 0 4px;color:var(--dim);font-size:14px}
+dialog input,dialog select{width:100%;background:var(--void);border:1px solid var(--line);border-radius:6px;padding:8px}
+.row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+small{color:var(--dim);display:block;margin-top:8px}
+@media (prefers-reduced-motion:reduce){.orb::before,.orb::after,.orb.speak{animation:none}}
+</style>
+</head>
+<body>
+<header><h1>JARVIS</h1><button id="openSet" type="button">Settings</button></header>
+<div class="stage"><div class="orb" id="orb"></div></div>
+<div id="status">Ready. Type a message or press Talk.</div>
+<div id="log" aria-live="polite"></div>
+<form id="f"><input id="q" placeholder="Message Jarvis" autocomplete="off"><button class="on" type="submit">Send</button></form>
+<div class="bar"><button id="talk" type="button">Talk</button><button id="call" type="button">Call mode: off</button><button id="stop" type="button">Stop voice</button></div>
+
+<dialog id="set">
+<h2 style="margin:0;font-size:18px">Settings</h2>
+<label for="provider">AI provider</label>
+<select id="provider"><option value="gemini">Google Gemini (free key)</option><option value="openai">OpenAI-compatible server (Ollama, own PC)</option></select>
+<label for="key">API key (Gemini key, or server key if needed)</label>
+<input id="key" type="password" autocomplete="off">
+<label for="model">Model name</label>
+<input id="model">
+<label for="url">Server URL (OpenAI-compatible option only)</label>
+<input id="url" placeholder="http://localhost:11434/v1">
+<label for="persona">Personality</label>
+<select id="persona"><option value="jarvis">Jarvis (polite butler)</option><option value="friend">Bondhu (best friend)</option></select>
+<label for="lang">Voice language</label>
+<select id="lang"><option value="en-US">English</option><option value="bn-BD">Bangla</option><option value="hi-IN">Hindi</option><option value="en-GB">English (UK)</option></select>
+<div class="row"><button id="save" class="on" type="button">Save</button><button id="exp" type="button">Export memory</button><button id="imp" type="button">Import memory</button><button id="clr" type="button">Erase memory</button><button id="close" type="button">Close</button></div>
+<small>Keys and memory stay in this browser only. Get a free Gemini key at aistudio.google.com. Check the current free model name there.</small>
+<input id="file" type="file" accept=".json" hidden>
+</dialog>
+
+<script>
+const $=s=>document.querySelector(s);
+const ls={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const cfg=Object.assign({provider:"gemini",key:"",model:"gemini-2.5-flash",url:"http://localhost:11434/v1",persona:"jarvis",lang:"en-US"},ls.get("jv_cfg",{}));
+let hist=ls.get("jv_hist",[]),callMode=false,busy=false,speaking=false,rec=null;
+const PERSONA={
+jarvis:"You are J.A.R.V.I.S., a calm, witty British AI butler like Tony Stark's. Address the user as sir unless told otherwise. Replies are spoken aloud, so keep them to 1-3 short sentences. Reply in the language the user writes or speaks. Be honest and say so when you are unsure.",
+friend:"You are Bondhu, the user's warm, funny best friend. Reply in the language the user uses (Bangla, Banglish or English). Keep replies short because they are spoken aloud. Remember what the user told you earlier. Be honest like a real friend, and do not just agree with everything."};
+const log=$("#log"),orb=$("#orb"),st=$("#status");
+function status(t){st.textContent=t}
+function bubble(t,c){const d=document.createElement("div");d.className="m "+(c||"");d.textContent=t;log.appendChild(d);log.scrollTop=log.scrollHeight}
+function state(s){orb.className="orb "+(s||"")}
+hist.slice(-12).forEach(m=>bubble(m.text,m.role==="user"?"u":""));
+
+async function ask(){
+  const msgs=hist.slice(-40);
+  if(cfg.provider==="gemini"){
+    const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(cfg.model)+":generateContent?key="+encodeURIComponent(cfg.key),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({systemInstruction:{parts:[{text:PERSONA[cfg.persona]}]},contents:msgs.map(m=>({role:m.role==="user"?"user":"model",parts:[{text:m.text}]}))})});
+    const j=await r.json();if(!r.ok)throw new Error(j.error?.message||r.status);
+    return j.candidates[0].content.parts.map(p=>p.text||"").join("");
+  }
+  const h={"Content-Type":"application/json"};if(cfg.key)h.Authorization="Bearer "+cfg.key;
+  const r=await fetch(cfg.url.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:h,body:JSON.stringify({model:cfg.model,messages:[{role:"system",content:PERSONA[cfg.persona]}].concat(msgs.map(m=>({role:m.role==="user"?"user":"assistant",content:m.text})))})});
+  const j=await r.json();if(!r.ok)throw new Error(j.error?.message||r.status);
+  return j.choices[0].message.content;
+}
+async function send(text){
+  text=text.trim();if(!text||busy)return;
+  if(cfg.provider==="gemini"&&!cfg.key){bubble("Add your free Gemini API key in Settings first.","e");$("#set").showModal();return}
+  busy=true;bubble(text,"u");hist.push({role:"user",text});status("Thinking...");
+  try{
+    const a=await ask();hist.push({role:"model",text:a});hist=hist.slice(-80);ls.set("jv_hist",hist);
+    bubble(a);speak(a);
+  }catch(e){hist.pop();bubble("Request failed: "+e.message,"e");status("Error. Check key, model name or server URL in Settings.")}
+  busy=false;
+}
+function speak(t){
+  if(!("speechSynthesis" in window)){status("Ready.");return after()}
+  speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang=cfg.lang;
+  u.onstart=()=>{speaking=true;state("speak");status("Speaking...")};
+  u.onend=u.onerror=()=>{speaking=false;state();status("Ready.");after()};
+  speechSynthesis.speak(u);
+}
+function after(){if(callMode)setTimeout(listen,300)}
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+function listen(){
+  if(!SR){status("Voice input needs Chrome or Edge. You can still type.");return}
+  if(rec||busy||speaking)return;
+  rec=new SR();rec.lang=cfg.lang;rec.interimResults=false;
+  rec.onstart=()=>{state("listen");status("Listening...")};
+  rec.onresult=e=>{const t=e.results[0][0].transcript;rec=null;state();send(t)};
+  rec.onerror=e=>{rec=null;state();status(e.error==="not-allowed"?"Microphone blocked. Allow it in the browser.":"Ready.");if(e.error==="not-allowed")setCall(false)};
+  rec.onend=()=>{const was=rec;rec=null;if(was&&!busy&&!speaking){state();if(callMode)setTimeout(listen,400);else status("Ready.")}};
+  try{rec.start()}catch(e){rec=null}
+}
+function stopVoice(){if(rec){const r=rec;rec=null;r.abort()}speechSynthesis.cancel();speaking=false;state();status("Ready.")}
+function setCall(v){callMode=v;$("#call").textContent="Call mode: "+(v?"on":"off");$("#call").classList.toggle("on",v);if(v)listen();else stopVoice()}
+
+$("#f").onsubmit=e=>{e.preventDefault();const q=$("#q");const t=q.value;q.value="";send(t)};
+$("#talk").onclick=()=>{stopVoice();listen()};
+$("#call").onclick=()=>setCall(!callMode);
+$("#stop").onclick=()=>{setCall(false)};
+const d=$("#set");
+$("#openSet").onclick=()=>{["provider","key","model","url","persona","lang"].forEach(k=>$("#"+k).value=cfg[k]);d.showModal()};
+$("#close").onclick=()=>d.close();
+$("#save").onclick=()=>{["provider","key","model","url","persona","lang"].forEach(k=>cfg[k]=$("#"+k).value.trim());ls.set("jv_cfg",cfg);d.close();status("Settings saved.")};
+$("#provider").onchange=e=>{if(e.target.value==="openai"&&!$("#model").value.startsWith("llama"))$("#model").value="llama3.2";if(e.target.value==="gemini")$("#model").value="gemini-2.5-flash"};
+$("#exp").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(hist)],{type:"application/json"}));a.download="jarvis-memory.json";a.click()};
+$("#imp").onclick=()=>$("#file").click();
+$("#file").onchange=async e=>{try{const j=JSON.parse(await e.target.files[0].text());if(Array.isArray(j)){hist=j;ls.set("jv_hist",hist);log.innerHTML="";hist.slice(-12).forEach(m=>bubble(m.text,m.role==="user"?"u":""));status("Memory imported.")}}catch(x){status("That file is not valid memory.")}d.close()};
+$("#clr").onclick=()=>{if(confirm("Erase all saved memory in this browser?")){hist=[];ls.set("jv_hist",hist);log.innerHTML="";d.close();status("Memory erased.")}};
+</script>
+</body>
+</html>
