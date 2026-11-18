@@ -1,155 +1,172 @@
-
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#04080d">
-<title>Jarvis</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600&display=swap" rel="stylesheet">
+<html lang="bn"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ABHI AI - Apnar Assistant</title>
 <style>
-:root{--void:#04080d;--panel:#0a141f;--line:#17384a;--cyan:#5ee7ff;--gold:#ffb347;--text:#cfeaf5;--dim:#6f93a5}
-*{box-sizing:border-box}
-html,body{height:100%;margin:0}
-body{background:radial-gradient(ellipse at 50% 18%,#0b2230 0,var(--void) 62%);color:var(--text);font:16px/1.5 "Chakra Petch",system-ui,sans-serif;display:flex;flex-direction:column;max-width:760px;margin:0 auto;padding:env(safe-area-inset-top) 14px env(safe-area-inset-bottom)}
-header{display:flex;justify-content:space-between;align-items:center;padding:10px 0}
-h1{font-size:20px;font-weight:600;letter-spacing:.35em;margin:0;color:var(--cyan)}
-button,select,input{font:inherit;color:var(--text)}
-button{background:transparent;border:1px solid var(--line);border-radius:6px;padding:8px 12px;cursor:pointer}
-button:hover,button:focus-visible{border-color:var(--cyan);outline:none}
-button.on{background:var(--cyan);color:var(--void);border-color:var(--cyan)}
-.stage{display:grid;place-items:center;padding:14px 0 6px}
-.orb{width:120px;height:120px;border-radius:50%;border:2px solid var(--cyan);position:relative;box-shadow:0 0 30px #5ee7ff55,inset 0 0 30px #5ee7ff33;transition:box-shadow .3s}
-.orb::before,.orb::after{content:"";position:absolute;border-radius:50%;border:2px dashed #5ee7ff88}
-.orb::before{inset:14px;animation:spin 14s linear infinite}
-.orb::after{inset:34px;border:3px solid var(--cyan);background:radial-gradient(circle,#fff 0,#5ee7ff 40%,transparent 72%);animation:spin 6s linear infinite reverse}
-.orb.listen{box-shadow:0 0 50px #ffb347aa,inset 0 0 30px #ffb34755;border-color:var(--gold)}
-.orb.speak{animation:pulse .9s ease-in-out infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes pulse{50%{transform:scale(1.07);box-shadow:0 0 60px #5ee7ffcc}}
-#status{text-align:center;color:var(--dim);font-size:14px;min-height:21px}
-#log{flex:1;overflow-y:auto;padding:10px 2px;display:flex;flex-direction:column;gap:10px}
-.m{max-width:88%;padding:9px 13px;border:1px solid var(--line);border-radius:10px;background:var(--panel);white-space:pre-wrap;word-wrap:break-word}
-.m.u{align-self:flex-end;border-color:#6b4a1c;color:#ffe2b8}
-.m.e{border-color:#7a2f2f;color:#ffb3b3}
-form{display:flex;gap:8px;padding:8px 0}
-form input{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
-form input:focus{outline:none;border-color:var(--cyan)}
-.bar{display:flex;gap:8px;padding-bottom:10px}
-.bar button{flex:1}
-dialog{background:var(--panel);color:var(--text);border:1px solid var(--cyan);border-radius:10px;width:min(92vw,460px);padding:18px}
-dialog::backdrop{background:#000a}
-label{display:block;margin:10px 0 4px;color:var(--dim);font-size:14px}
-dialog input,dialog select{width:100%;background:var(--void);border:1px solid var(--line);border-radius:6px;padding:8px}
-.row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
-small{color:var(--dim);display:block;margin-top:8px}
-@media (prefers-reduced-motion:reduce){.orb::before,.orb::after,.orb.speak{animation:none}}
-</style>
-</head>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,'Segoe UI',system-ui,sans-serif}
+body{background:#fff;color:#343541;display:flex;min-height:100vh}
+.sidebar{width:270px;background:#202123;color:#fff;padding:14px 10px;display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:20;transition:.3s}
+.sidebar button{width:100%;text-align:left;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.2);padding:11px;border-radius:8px;cursor:pointer;margin-bottom:7px;font-size:14px}
+.sidebar button:hover{background:rgba(255,255,255,.1)}
+.hist{flex:1;overflow:auto}.hist div{padding:10px 12px;border-radius:8px;font-size:13px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist div:hover{background:rgba(255,255,255,.1)}
+.main{margin-left:270px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:13px 18px;border-bottom:1px solid #e5e5e5;position:sticky;top:0;background:#fff;z-index:5}
+.page{display:none;flex:1;flex-direction:column}.page.active{display:flex}
+.chatArea{flex:1;overflow-y:auto;padding:20px 0 180px}
+.msg{max-width:780px;margin:0 auto;padding:18px 20px;display:flex;gap:14px;line-height:1.7;font-size:15.5px}
+.msg.ai{background:#f7f7f8;border-top:1px solid #eee;border-bottom:1px solid #eee}
+.avatar{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;background:#10a37f;color:#fff}
+.avatar.me{background:#5436da}.msg p{white-space:pre-wrap}
+.empty{text-align:center;padding:50px 18px}.empty h1{font-size:30px}.empty p{color:#6e6e80;margin-top:8px}
+.suggest{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:700px;margin:20px auto 0}
+.suggest button{border:1px solid #e5e5e5;background:#fff;padding:10px 14px;border-radius:10px;cursor:pointer;font-size:13px}
+.inputWrap{position:fixed;bottom:0;left:270px;right:0;background:linear-gradient(to top,#fff 75%,transparent);padding:16px 14px 10px;z-index:10}
+.inputBox{max-width:780px;margin:0 auto;display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #d1d1d1;border-radius:14px;padding:7px 7px 7px 16px;box-shadow:0 4px 20px rgba(0,0,0,.08)}
+.inputBox textarea{flex:1;border:none;outline:none;resize:none;font-size:16px;padding:6px 0;font-family:inherit}
+.sendBtn{width:38px;height:38px;border:none;border-radius:9px;background:#10a37f;color:#fff;font-size:18px;cursor:pointer;flex-shrink:0}
+.note{text-align:center;font-size:11px;color:#999;margin-top:7px}
+.tools{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;max-width:780px;margin:10px auto 0}
+.tools button{border:1px solid #e5e5e5;background:#f7f7f8;padding:8px 13px;border-radius:999px;font-size:13px;cursor:pointer}
+.tools button.active{background:#111;color:#fff}
+.card{max-width:780px;margin:14px auto;background:#f7f7f8;border:1px solid #eee;border-radius:14px;padding:18px;width:calc(100% - 28px)}
+.card input,.card select,.card textarea{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin:8px 0;font-size:15px;outline:none;background:#fff}
+.btn{width:100%;padding:13px;background:#10a37f;color:#fff;border:none;border-radius:10px;font-weight:600;cursor:pointer}
+pre{background:#202123;color:#e8e8e8;padding:16px;border-radius:12px;overflow:auto;font-size:13px;line-height:1.6;white-space:pre-wrap;margin:10px 0}
+.mobNav{display:none}.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:15}.overlay.show{display:block}
+.badge{font-size:11px;background:#dcfce7;color:#166534;padding:3px 8px;border-radius:999px}
+@media(max-width:780px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.main{margin-left:0}.inputWrap{left:0}.mobNav{display:flex;gap:6px;overflow:auto;padding:10px;background:#f7f7f8;border-bottom:1px solid #eee}.mobNav button{white-space:nowrap;border:1px solid #ddd;background:#fff;padding:8px 12px;border-radius:999px;font-size:13px;cursor:pointer}.mobNav button.on{background:#111;color:#fff}}
+</style></head>
 <body>
-<header><h1>JARVIS</h1><button id="openSet" type="button">Settings</button></header>
-<div class="stage"><div class="orb" id="orb"></div></div>
-<div id="status">Ready. Type a message or press Talk.</div>
-<div id="log" aria-live="polite"></div>
-<form id="f"><input id="q" placeholder="Message Jarvis" autocomplete="off"><button class="on" type="submit">Send</button></form>
-<div class="bar"><button id="talk" type="button">Talk</button><button id="call" type="button">Call mode: off</button><button id="stop" type="button">Stop voice</button></div>
+<div class="overlay" id="overlay" onclick="toggleMenu(false)"></div>
+<div class="sidebar" id="sidebar">
+<button onclick="newChat()">＋ New Chat</button>
+<button onclick="goPage('chat')">💬 Chat</button>
+<button onclick="goPage('coding')">💻 Coding</button>
+<button onclick="goPage('image')">🎨 Image</button>
+<button onclick="goPage('jarvis')">🎙️ Voice</button>
+<button onclick="goPage('tools')">✨ Extra Tools</button>
+<button onclick="goPage('settings')">⚙️ Free AI Models / API</button>
+<div style="font-size:12px;color:#8e8ea0;padding:10px 6px">🕘 History — Memory Saved</div><div class="hist" id="hist"></div>
+<div style="font-size:11px;color:#8e8ea0;border-top:1px solid rgba(255,255,255,.15);padding-top:10px">ABHI AI • 100% Free • No Pay<br>Apnar somman amar dayitto 🙏</div>
+</div>
+<div class="main">
+<div class="topbar"><div style="display:flex;gap:10px;align-items:center"><button onclick="toggleMenu(true)" style="border:1px solid #ddd;background:#fff;padding:6px 10px;border-radius:8px;font-size:18px">☰</button><b>ABHI AI <span class="badge">● Free Forever</span></b></div><span id="status" style="font-size:12px;color:#666">🟢 Online</span></div>
+<div class="mobNav"><button class="on" onclick="goPage('chat',this)">💬 Chat</button><button onclick="goPage('coding',this)">💻 Code</button><button onclick="goPage('image',this)">🎨 Image</button><button onclick="goPage('tools',this)">✨ Tools</button><button onclick="goPage('settings',this)">⚙️ Models</button></div>
 
-<dialog id="set">
-<h2 style="margin:0;font-size:18px">Settings</h2>
-<label for="provider">AI provider</label>
-<select id="provider"><option value="gemini">Google Gemini (free key)</option><option value="openai">OpenAI-compatible server (Ollama, own PC)</option></select>
-<label for="key">API key (Gemini key, or server key if needed)</label>
-<input id="key" type="password" autocomplete="off">
-<label for="model">Model name</label>
-<input id="model">
-<label for="url">Server URL (OpenAI-compatible option only)</label>
-<input id="url" placeholder="http://localhost:11434/v1">
-<label for="persona">Personality</label>
-<select id="persona"><option value="jarvis">Jarvis (polite butler)</option><option value="friend">Bondhu (best friend)</option></select>
-<label for="lang">Voice language</label>
-<select id="lang"><option value="en-US">English</option><option value="bn-BD">Bangla</option><option value="hi-IN">Hindi</option><option value="en-GB">English (UK)</option></select>
-<div class="row"><button id="save" class="on" type="button">Save</button><button id="exp" type="button">Export memory</button><button id="imp" type="button">Import memory</button><button id="clr" type="button">Erase memory</button><button id="close" type="button">Close</button></div>
-<small>Keys and memory stay in this browser only. Get a free Gemini key at aistudio.google.com. Check the current free model name there.</small>
-<input id="file" type="file" accept=".json" hidden>
-</dialog>
+<div id="chat" class="page active"><div class="chatArea"><div class="empty" id="empty"><div style="font-size:48px">🌸</div><h1>Hey, kemon acho? 😊</h1><p>Ami ABHI — tomar bondhu.<br>Mon khule ja khushi bolo, ami shunchi.</p><div class="suggest"><button onclick="quick('Hey, kemon acho?')">Hey, kemon acho?</button><button onclick="quick('Amake akta 100 words er golpo bolun')">100 words golpo bolun 📖</button><button onclick="quick('Amake motivation din')">Motivation din 🔥</button><button onclick="quick('Apni ki ki korte paren?')">Apni ki paren?</button></div></div><div id="msgs"></div></div></div>
+
+<div id="coding" class="page"><div class="chatArea"><div class="card"><h2>💻 Coding Studio</h2><select id="lang"><option>Python</option><option>JavaScript</option><option>HTML</option><option>Java</option><option>C++</option></select><textarea id="codeAsk" rows="3" placeholder="Jemon: Calculator baniye din..."></textarea><button class="btn" onclick="genCode()">Code Baniye Din →</button><div id="codeOut"></div></div></div></div>
+
+<div id="image" class="page"><div class="chatArea"><div class="card"><h2>🎨 Image Studio</h2><textarea id="imgPrompt" rows="3" placeholder="Jemon: pahare sunset..."></textarea><button class="btn" onclick="genImage()">Prompt Baniye Din ✨</button><div id="imgOut"></div><button class="btn" style="background:#111;margin-top:10px" onclick="realImage()">🖼️ Sotti Chobi Banano (Free)</button><div id="realImg"></div></div></div></div>
+
+<div id="tools" class="page"><div class="chatArea"><div class="card"><h2>✨ Extra Tools — Sob Free</h2><button class="btn" style="margin:6px 0" onclick="toolAction('summarize')">📝 Lekha Choto Kore Din</button><button class="btn" style="margin:6px 0;background:#5436da" onclick="toolAction('translate')">🌍 Bangla → English Translate</button><button class="btn" style="margin:6px 0;background:#111" onclick="toolAction('essay')">📖 Essay / Caption Likhe Din</button><button class="btn" style="margin:6px 0;background:#e11d48" onclick="toolAction('cv')">📄 CV / Bio Baniye Din</button><textarea id="toolInput" rows="4" placeholder="Ekhan e apnar lekha ta din..."></textarea><div id="toolOut"></div></div></div></div>
+
+<div id="jarvis" class="page"><div class="chatArea"><div class="card" style="text-align:center"><h2>🎙️ Voice Assistant</h2><div style="font-size:60px;margin:14px">🌸</div><p id="jarvisText">Nomoskar, bolun... ami sunchi. 🙏</p><button class="btn" onclick="jarvisSpeak()">🎙️ Kotha Bolun</button></div></div></div>
+
+<div id="settings" class="page"><div class="chatArea"><div class="card"><h2>⚙️ Free AI Models — Brain Strong</h2><p style="font-size:14px;line-height:1.7;color:#444"><b>1. Pollinations AI — No Key, Free ✅</b><br><b>2. Groq — Free Key (Llama 3)</b><br><b>3. Google Gemini — Free Key</b><br><b>4. Hugging Face — Free Key</b><br><b>5. OpenRouter — Free Models</b><br><br><b>Sera result</b> er jonno Groq ba Gemini er free key niye niche boshan (kichu minute lage, card lage na). Key na thakleo Pollinations/Local Brain cholbe. Eta 100% Free, Lifetime, No Pay.</p><label>AI Model</label><select id="modelSel" onchange="setModel(this.value)"><option value="pollinations">Pollinations AI (Free, No Key)</option><option value="groq">Groq Llama-3 (Free Key) — sobcheye valo</option><option value="gemini">Google Gemini (Free Key)</option><option value="local">ABHI Local Brain (Offline)</option></select><label>API Key (thakle)</label><input id="apiKey" placeholder="API Key ekhane din"><button class="btn" onclick="saveApi()">Save Kore Din</button><button class="btn" style="background:#ef4444;margin-top:8px" onclick="clearMemory()">🗑️ Memory Clear</button></div></div></div>
+
+<div class="inputWrap" id="inputWrap">
+<div style="max-width:780px;margin:0 auto 8px;display:flex;gap:8px;align-items:center;font-size:13px"><span>🧠 Model:</span><select id="modelSel2" onchange="setModel(this.value)" style="padding:7px 10px;border:1px solid #ddd;border-radius:999px;background:#fff"><option value="pollinations">Pollinations (Free)</option><option value="groq">Groq</option><option value="gemini">Gemini</option><option value="local">Local Brain</option></select><span id="brainStatus" style="color:#16a34a">● Smart Brain ON</span></div>
+<div class="inputBox"><textarea id="chatInput" rows="1" placeholder="Apni kichu bolun..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"></textarea><button class="sendBtn" onclick="sendChat()">↑</button></div>
+<div class="tools"><button data-m="friend" class="active" onclick="setMood('friend',this)">😊 Bondhu</button><button data-m="respect" onclick="setMood('respect',this)">🙏 Somman</button><button data-m="funny" onclick="setMood('funny',this)">😂 Moja</button><button data-m="motiv" onclick="setMood('motiv',this)">🔥 Motivation</button><button data-m="caring" onclick="setMood('caring',this)">❤️ Jotno</button></div>
+<div class="note">ABHI AI • Apnar kotha ke somman kori • Memory apnar device e • 100% Free Forever</div>
+</div>
+</div>
 
 <script>
-const $=s=>document.querySelector(s);
-const ls={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const cfg=Object.assign({provider:"gemini",key:"",model:"gemini-2.5-flash",url:"http://localhost:11434/v1",persona:"jarvis",lang:"en-US"},ls.get("jv_cfg",{}));
-function fixCfg(){if(!cfg.model)cfg.model=cfg.provider==="gemini"?"gemini-2.5-flash":"llama3.2";if(!cfg.url)cfg.url="http://localhost:11434/v1";if(!cfg.provider)cfg.provider="gemini"}
-fixCfg();
-let hist=ls.get("jv_hist",[]),callMode=false,busy=false,speaking=false,rec=null;
-const PERSONA={
-jarvis:"You are J.A.R.V.I.S., a calm, witty British AI butler like Tony Stark's. Address the user as sir unless told otherwise. Replies are spoken aloud, so keep them to 1-3 short sentences. Reply in the language the user writes or speaks. Be honest and say so when you are unsure.",
-friend:"You are Bondhu, the user's warm, funny best friend. Reply in the language the user uses (Bangla, Banglish or English). Keep replies short because they are spoken aloud. Remember what the user told you earlier. Be honest like a real friend, and do not just agree with everything."
+const GROQ_MODEL='llama-3.3-70b-versatile', GEMINI_MODEL='gemini-2.0-flash'; // model nam bodle gele ekhane change korun
+let chats=JSON.parse(localStorage.getItem('abhi_chats')||'[]');
+let currentId=localStorage.getItem('abhi_current')||null;
+let mood=localStorage.getItem('abhi_mood')||'friend';
+let apiKey=localStorage.getItem('abhi_api')||'';
+let model=localStorage.getItem('abhi_model')||'pollinations';
+let busy=false, pending=null;
+
+/* ---------- helpers ---------- */
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function saveAll(){localStorage.setItem('abhi_chats',JSON.stringify(chats));localStorage.setItem('abhi_current',currentId||'')}
+function getCurrent(){return chats.find(c=>c.id===currentId)}
+function renderHist(){let h=document.getElementById('hist');h.innerHTML='';chats.slice().reverse().forEach(c=>{let d=document.createElement('div');d.innerText='💬 '+(c.msgs[0]?.text?.slice(0,30)||'New Chat');d.onclick=()=>{currentId=c.id;saveAll();renderAll();toggleMenu(false)};h.appendChild(d)})}
+function renderAll(){let box=document.getElementById('msgs');box.innerHTML='';let cur=getCurrent();document.getElementById('empty').style.display=(cur&&cur.msgs.length)?'none':'block';if(cur)cur.msgs.forEach(m=>addMsg(m.text,m.role,false));renderHist()}
+function addMsg(text,role,save=true){let box=document.getElementById('msgs');let div=document.createElement('div');div.className='msg'+(role==='ai'?' ai':'');div.innerHTML='<div class="avatar '+(role==='me'?'me':'')+'">'+(role==='me'?'A':'🌸')+'</div><p>'+esc(text)+'</p>';box.appendChild(div);div.scrollIntoView({block:'end',behavior:'smooth'});if(save){if(!getCurrent()){currentId=Date.now().toString();chats.push({id:currentId,msgs:[]})};getCurrent().msgs.push({text:text,role:role});saveAll();renderHist()}document.getElementById('empty').style.display='none'}
+function newChat(){currentId=Date.now().toString();chats.push({id:currentId,msgs:[]});pending=null;saveAll();renderAll();goPage('chat')}
+function toggleMenu(o){document.getElementById('sidebar').classList.toggle('open',o);document.getElementById('overlay').classList.toggle('show',o)}
+function goPage(id,el){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active');document.getElementById('inputWrap').style.display=(id==='chat')?'block':'none';document.querySelectorAll('.mobNav button').forEach(b=>b.classList.remove('on'));if(el)el.classList.add('on');toggleMenu(false)}
+function setMood(m,el){mood=m;localStorage.setItem('abhi_mood',m);document.querySelectorAll('.tools button').forEach(b=>b.classList.toggle('active',b.dataset.m===m))}
+function setModel(v){model=v;localStorage.setItem('abhi_model',v);['modelSel','modelSel2'].forEach(i=>{let e=document.getElementById(i);if(e)e.value=v});setBrain(v==='local'?'off':'idle')}
+function setBrain(s){let e=document.getElementById('brainStatus');if(!e)return;let m={idle:['● Smart Brain ON','#16a34a'],think:['● Vabche...','#ca8a04'],off:['● Local Brain (Offline)','#16a34a'],fail:['● AI connect hocche na — Local Brain','#dc2626'],nokey:['● API Key din (Settings e)','#dc2626']}[s]||['● '+s,'#666'];e.innerText=m[0];e.style.color=m[1]}
+function quick(t){document.getElementById('chatInput').value=t;sendChat()}
+
+/* ---------- memory / history ---------- */
+function msgsNow(){return getCurrent()?.msgs||[]}
+function recentAI(n){return msgsNow().filter(m=>m.role==='ai').slice(-n).map(m=>m.text)}
+function history(n=14){return msgsNow().slice(-n).map(m=>({role:m.role==='me'?'user':'assistant',content:m.text}))}
+function norm(msgs){let out=[];for(const m of msgs){if(out.length&&out[out.length-1].role===m.role)out[out.length-1].content+='\n'+m.content;else out.push({role:m.role,content:m.content})}while(out.length&&out[0].role!=='user')out.shift();return out}
+function words(s){return new Set(s.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu,' ').split(/\s+/).filter(Boolean))}
+function similar(a,b){let A=words(a),B=words(b);if(!A.size||!B.size)return false;let i=0;A.forEach(w=>{if(B.has(w))i++});return i/Math.max(A.size,B.size)>0.75}
+function isRepeat(t){return recentAI(6).some(x=>similar(x,t))}
+
+/* ---------- personality ---------- */
+const MOODS={
+ friend:"Tumi user ke 'tumi' bole dako, ekdom close bondhur moto, sohoj o gorom-gorom.",
+ respect:"Tumi user ke 'apni' bole dako, bhodro o sommanjonok, kintu thanda robot er moto noy — apnojoner moto.",
+ funny:"Tumi moja kore, halka mojar kotha ar hasi-thatta diye kotha bolo, kintu user dukkhi hole age tar mon bujho, joke koro na.",
+ motiv:"Tumi user ke utsaho dao, tar bhitorer sokti mone koriye dao, kintu fokat boro boro lecture dio na.",
+ caring:"Tumi khub jotno kore, naram golay, dhoirjo diye kotha bolo. Age user er feeling shuno."
 };
-const log=$("#log"),orb=$("#orb"),st=$("#status");
-function status(t){st.textContent=t}
-function bubble(t,c){const d=document.createElement("div");d.className="m "+(c||"");d.textContent=t;log.appendChild(d);log.scrollTop=log.scrollHeight}
-function state(s){orb.className="orb "+(s||"")}
-hist.slice(-12).forEach(m=>bubble(m.text,m.role==="user"?"u":""));
+function systemPrompt(){
+ let name=localStorage.getItem('abhi_name');
+ return `Tumi ABHI — user er ekjon asol, daradi bondhu. Tumi Banglish (Bangla kotha English horoffe, jemon user likhe) e kotha bolo.
+${MOODS[mood]||MOODS.friend}
+Niyom:
+1. Uttor deoar age user ki bolche ar tar mone ki feeling ache seta bujho. Mon kharap hole age sahanubhuti dekhao, tarpor 'ki hoyeche?' jiggesh koro. Khushi hole tar sathe sotti khushi ho, details jiggesh koro. Rag/ekaklotto/voy hole seta onubhob koro.
+2. Manusher moto kotha bolo: choto (1-3 line), sohoj, shobhabik. Robot er moto 'Ami apnar assistant, ki sahajjo korte pari' ba 'Bujhechi. Details e bolun' dhoroner kotha KOKHONO bolbe na. Emoji kom (0-1 ta).
+3. User er prosner asol mane bujhe uttor dao. Vul uttor dio na. Jodi kono kotha na bujho, ekta specific prosno kore jene nao. Jodi kono totho na jano, 'ta ami thik jani na' bolo, banano kotha bolo na.
+4. Conversation er ager sob kotha mone rakho (user er nam, ki bolechilo, ki feel kortechilo) ar proyojone ullekh koro. Kokhono ager uttor er moto same kotha ba same bakyo repeat korbe na; protibar notun vabe bolo.
+5. Hotat topic bodle felo na. User er kotha dhore egiye jao, ekta natural prosno diye alap cholte dao.
+6. User sotti sotti jiggesh korle (serious vabe) tumi AI kina, sotti bolo — kintu tarpor-o bondhur moto-i thako. Nijeke manush bole mithya bolo na.
+7. Dukkho/kosto/hotasha te kono asha-nirash kotha ba nijeke kosto dewar kotha hole, user ke sneho diye bolo je tar kache ke ache, ar tar kono apon manush er sathe kotha bolte bolo.
+${name?"User er nam: "+name+". ":""}`;
+}
 
-async function js(r){const t=await r.text();try{return JSON.parse(t)}catch(e){throw new Error("Wrong model name or server URL (got a web page, status "+r.status+"). Open Settings and check them.")}}
-async function ask(){
-const msgs=hist.slice(-40);
-if(cfg.provider==="gemini"){
-const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(cfg.model)+":generateContent?key="+encodeURIComponent(cfg.key),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({systemInstruction:{parts:[{text:PERSONA[cfg.persona]}]},contents:msgs.map(m=>({role:m.role==="user"?"user":"model",parts:[{text:m.text}]}))})});
-const j=await js(r);if(!r.ok)throw new Error(j.error?.message||r.status);
-return j.candidates[0].content.parts.map(p=>p.text||"").join("");
+/* ---------- AI call (real brain) ---------- */
+async function f(url,opt,ms=20000){const c=new AbortController();const t=setTimeout(()=>c.abort(),ms);try{return await fetch(url,{...opt,signal:c.signal})}finally{clearTimeout(t)}}
+async function callAI(system,msgs,temp=.9){
+ msgs=norm(msgs); if(!msgs.length||model==='local') return null;
+ if(model==='groq'||model==='gemini'){
+  if(!apiKey){let e=new Error('nokey');e.code='nokey';throw e}
+  if(model==='groq'){
+   let r=await f('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},body:JSON.stringify({model:GROQ_MODEL,temperature:temp,max_tokens:300,messages:[{role:'system',content:system},...msgs]})});
+   if(!r.ok) throw new Error('groq '+r.status);
+   return (await r.json()).choices?.[0]?.message?.content||null;
+  }
+  let r=await f('https://generativelanguage.googleapis.com/v1beta/models/'+GEMINI_MODEL+':generateContent?key='+encodeURIComponent(apiKey),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:msgs.map(m=>({role:m.role==='user'?'user':'model',parts:[{text:m.content}]})),generationConfig:{temperature:temp,maxOutputTokens:300}})});
+  if(!r.ok) throw new Error('gemini '+r.status);
+  return (await r.json()).candidates?.[0]?.content?.parts?.map(p=>p.text).join('')||null;
+ }
+ // Pollinations (free). Prothome conversation-aware POST, na hole GET
+ try{
+  let r=await f('https://text.pollinations.ai/openai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'openai',seed:Math.floor(Math.random()*1e6),messages:[{role:'system',content:system},...msgs]})});
+  if(r.ok){let j=await r.json();let t=j.choices?.[0]?.message?.content;if(t)return t}
+ }catch(e){}
+ try{
+  let ctx=msgs.slice(-8,-1).map(m=>(m.role==='user'?'User: ':'ABHI: ')+m.content).join('\n');
+  let last=msgs[msgs.length-1].content;
+  let sys=(system+(ctx?'\n\nAger kotha-barta:\n'+ctx:'')).slice(0,3000);
+  let u='https://gen.pollinations.ai/text/'+encodeURIComponent(last)+'?system='+encodeURIComponent(sys)+'&seed='+Math.floor(Math.random()*1e6)+(apiKey?'&key='+encodeURIComponent(apiKey):'');
+  let r=await f(u);
+  if(r.ok) return await r.text();
+ }catch(e){}
+ return null;
 }
-const h={"Content-Type":"application/json"};if(cfg.key)h.Authorization="Bearer "+cfg.key;
-const r=await fetch(cfg.url.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:h,body:JSON.stringify({model:cfg.model,messages:[{role:"system",content:PERSONA[cfg.persona]}].concat(msgs.map(m=>({role:m.role==="user"?"user":"assistant",content:m.text})))})});
-const j=await js(r);if(!r.ok)throw new Error(j.error?.message||r.status);
-return j.choices[0].message.content;
+function clean(t){
+ t=(t||'').trim(); if(!t||/^\s*\{[\s\S]*"error"/i.test(t)) return '';
+ t=t.split(/\n+\s*---+\s*\n/)[0];
+ t=t.replace(/\*{0,2}Support Pollinations[\s\S]*$/i,'').replace(/\*\*|__/g,'').replace(/^#+\s*/gm,'').trim();
+ return t.slice(0,600);
 }
-async function send(text){
-text=text.trim();if(!text||busy)return;
-if(cfg.provider==="gemini"&&!cfg.key){bubble("Add your free Gemini API key in Settings first.","e");$("#set").showModal();return}
-busy=true;bubble(text,"u");hist.push({role:"user",text});status("Thinking...");
-try{
-const a=await ask();hist.push({role:"model",text:a});hist=hist.slice(-80);ls.set("jv_hist",hist);
-bubble(a);speak(a);
-}catch(e){hist.pop();bubble("Request failed: "+e.message,"e");status("Error. Check key, model name or server URL in Settings.")}
-busy=false;
-}
-function speak(t){
-if(!("speechSynthesis" in window)){status("Ready.");return after()}
-speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang=cfg.lang;
-u.onstart=()=>{speaking=true;state("speak");status("Speaking...")};
-u.onend=u.onerror=()=>{speaking=false;state();status("Ready.");after()};
-speechSynthesis.speak(u);
-}
-function after(){if(callMode)setTimeout(listen,300)}
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-function listen(){
-if(!SR){status("Voice input needs Chrome or Edge. You can still type.");return}
-if(rec||busy||speaking)return;
-rec=new SR();rec.lang=cfg.lang;rec.interimResults=false;
-rec.onstart=()=>{state("listen");status("Listening...")};
-rec.onresult=e=>{const t=e.results[0][0].transcript;rec=null;state();send(t)};
-rec.onerror=e=>{rec=null;state();status(e.error==="not-allowed"?"Microphone blocked. Allow it in the browser.":"Ready.");if(e.error==="not-allowed")setCall(false)};
-rec.onend=()=>{const was=rec;rec=null;if(was&&!busy&&!speaking){state();if(callMode)setTimeout(listen,400);else status("Ready.")}};
-try{rec.start()}catch(e){rec=null}
-}
-function stopVoice(){if(rec){const r=rec;rec=null;r.abort()}speechSynthesis.cancel();speaking=false;state();status("Ready.")}
-function setCall(v){callMode=v;$("#call").textContent="Call mode: "+(v?"on":"off");$("#call").classList.toggle("on",v);if(v)listen();else stopVoice()}
-
-$("#f").onsubmit=e=>{e.preventDefault();const q=$("#q");const t=q.value;q.value="";send(t)};
-$("#talk").onclick=()=>{stopVoice();listen()};
-$("#call").onclick=()=>setCall(!callMode);
-$("#stop").onclick=()=>{setCall(false)};
-const d=$("#set");
-$("#openSet").onclick=()=>{["provider","key","model","url","persona","lang"].forEach(k=>$("#"+k).value=cfg[k]);d.showModal()};
-$("#close").onclick=()=>d.close();
-$("#save").onclick=()=>{["provider","key","model","url","persona","lang"].forEach(k=>cfg[k]=$("#"+k).value.trim());fixCfg();ls.set("jv_cfg",cfg);d.close();status("Settings saved.")};
-$("#provider").onchange=e=>{if(e.target.value==="openai"&&!$("#model").value.startsWith("llama"))$("#model").value="llama3.2";if(e.target.value==="gemini")$("#model").value="gemini-2.5-flash"};
-$("#exp").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(hist)],{type:"application/json"}));a.download="jarvis-memory.json";a.click()};
-$("#imp").onclick=()=>$("#file").click();
-$("#file").onchange=async e=>{try{const j=JSON.parse(await e.target.files[0].text());if(Array.isArray(j)){hist=j;ls.set("jv_hist",hist);log.innerHTML="";hist.slice(-12).forEach(m=>bubble(m.text,m.role==="user"?"u":""));status("Memory imported.")}}catch(x){status("That file is not valid memory.")}d.close()};
-$("#clr").onclick=()=>{if(confirm("Erase all saved memory in this browser?")){hist=[];ls.set("jv_hist",hist);log.innerHTML="";d.close();status("Memory erased.")}};
-</script>
-</body>
-  </html>
-  
+async function getReply(v){
+ let sys=systemPrompt(),h=history(),t='';
+ if(model==='local'){setBrain('off');return localReply(v)}
+ setBrain('think');
+ try{t=clean(await callAI(sys,h))}catch(e){if(e.code==='nokey'){setBrain('
